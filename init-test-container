@@ -22,17 +22,35 @@
 # and manually run individual tests.
 # 
 
+SLEEP_SECS=10
+ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
+while [ "${ZIMBRA_HOST_IP}x" = "x" ]; do
+    echo "Waiting for zimbra container to start"
+    sleep ${SLEEP_SECS}
+    ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
+done
+
+# Add entry in /etc/hosts from ZIMBRA_HOST_NAME
+# First check to make sure it hasn't already been appliec
+grep -q "${ZIMBRA_HOST_NAME}" /etc/hosts
+if [ $? != 0 ]; then
+    echo "Adding mapping for ${ZIMBRA_HOST_NAME} to ${ZIMBRA_HOST_IP} in /etc/hosts"
+    echo -e "${ZIMBRA_HOST_IP}\t${ZIMBRA_HOST_NAME}" >> /etc/hosts
+else
+    echo "An entry for ${ZIMBRA_HOST_NAME} is already present in /etc/hosts"
+fi
+
 # Update the config files
 echo "updating soap-harness config"
-echo /opt/qa/soapvalidator/conf/global.properties.in | sed \
+cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
   -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
   -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
   -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
-echo /opt/qa/genesis/conf/genesis.conf.in | sed \
+cat /opt/qa/genesis/conf/genesis.conf.in | sed \
   -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
   -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
   -e "s/HOSTNAME/${HOSTNAME}/" > /opt/qa/genesis/conf/genesis.conf
-  
+
 # Fire up STAF
 export PATH=/usr/local/staf/bin:$PATH
 echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
