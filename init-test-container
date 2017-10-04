@@ -1,0 +1,53 @@
+#!/bin/bash
+# Perform runtime initialization of container. As part of that
+# the file /opt/zimbra/qa/global.properties.in is used as a template
+# from which the file /opt/zimbra/qa/global.properties is created.
+#
+# Expects the following envirnment variables to be present:
+#   ZIMBRA_HOST_NAME
+#   ZIMBRA_DEFAULT_DOMAIN
+#   ADMIN_PW
+#
+# By default, the SanityTest suite will be run and the container will shut down.
+# If, instead, additional argument(s) are provided to this script, then the initial
+# configuration setup will still be performed, STAF will be started and the local
+# services added, but instead of executing the SanityTest and exiting, the
+# additional arguments will be executed.  For example, if this script is 
+# called as follows (it will be installed in the container at /opt/qa/init)...
+#
+#   /opt/qa/init /bin/sleep inifinity
+#
+# ...then the container will be brought up and initialized, but won't do anything
+# automatically.  You can then connect to the container (docker exec -it soap bash)
+# and manually run individual tests.
+# 
+
+# Update the config files
+echo "updating soap-harness config"
+echo /opt/qa/soapvalidator/conf/global.properties.in | sed \
+  -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
+  -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
+  -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
+echo /opt/qa/genesis/conf/genesis.conf.in | sed \
+  -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
+  -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
+  -e "s/HOSTNAME/${HOSTNAME}/" > /opt/qa/genesis/conf/genesis.conf
+  
+# Fire up STAF
+export PATH=/usr/local/staf/bin:$PATH
+echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
+echo "starting STAF"
+/usr/local/staf/startSTAFProc.sh
+sleep 5
+echo "adding STAF services"
+STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/bin/zimbrastaf.jar
+STAF local service add service LOG LIBRARY STAFLog
+
+if [ $# -eq 0 ]
+then
+    echo "running SanityTest suite"
+    STAF LOCAL soap EXECUTE ${ZIMBRA_HOST} ZIMBRAQAROOT /opt/qa/soapvalidator/ DIRECTORY  /opt/qa/soapvalidator/data/soapvalidator/SanityTest/ LOG /results/ SUITE SANITY
+else
+    echo "running ${@}"
+    $@
+fi
