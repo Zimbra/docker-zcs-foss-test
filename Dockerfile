@@ -49,9 +49,8 @@ RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-2017
 RUN mkdir -p /opt/qa && \
     mkdir -p /opt/qa/logs/soap-harness && \
     mkdir -p /opt/qa/logs/genesis && \
-    mkdir -p /opt/qa/genesis/conf && \
     tar xzvf /tmp/soapvalidator-20171004.tar.gz -C /opt/qa/ && \
-    tar xvf /tmp/soapvalidator-20171004.tar.gz -C /opt/qa/ && \
+    tar xvf /tmp/genesis-20171004.tar -C /opt/qa/ && \
     cp /tmp/genesis-20171004.conf /opt/qa/genesis/conf/genesis.conf.in && \
     chmod +x /tmp/STAF3426-setup-linux-amd64-NoJVM.bin && \
     /tmp/STAF3426-setup-linux-amd64-NoJVM.bin -i silent \
@@ -69,6 +68,15 @@ RUN mkdir -p /opt/qa && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && gem install soap4r-spox log4r net-ldap json httpclient' && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && rvm cleanup all' && \
     apt-get clean
+
+# ************************************************************************
+# The following is required for Genesis tests to be run.
+# 1. Disable setting that prevents users from writing to current terminal device
+# 2. Symlink in /bin/env (some genesis tests expect it to be there)
+# ************************************************************************
+RUN sed -i.bak 's/^mesg/# mesg/' /root/.profile && \
+    ln -s /usr/bin/env /bin/env && \
+    echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
 
 COPY ./init-test-container /opt/qa/init
 RUN  chmod +x /opt/qa/init

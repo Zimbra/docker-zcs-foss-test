@@ -23,6 +23,7 @@
 # 
 
 SLEEP_SECS=10
+SLEEP_LONG_SECS=60
 ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
 while [ "${ZIMBRA_HOST_IP}x" = "x" ]; do
     echo "Waiting for zimbra container to start"
@@ -53,18 +54,26 @@ cat /opt/qa/genesis/conf/genesis.conf.in | sed \
 
 # Fire up STAF
 export PATH=/usr/local/staf/bin:$PATH
-echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
 echo "starting STAF"
 /usr/local/staf/startSTAFProc.sh
-sleep 5
+sleep ${SLEEP_SECS}
 echo "adding STAF services"
 STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/bin/zimbrastaf.jar
 STAF local service add service LOG LIBRARY STAFLog
 
+# Wait for the Zimbra container to finish configuration
+curl -s -k https://${ZIMBRA_HOST_NAME} > /dev/null
+while [ $? -ne 0 ]; do
+    echo "Waiting for ${ZIMBRA_HOST_NAME} services to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
+    sleep ${SLEEP_LONG_SECS}
+    curl -s -k https://${ZIMBRA_HOST_NAME} > /dev/null
+done
+
 if [ $# -eq 0 ]
 then
     echo "running SanityTest suite"
-    STAF LOCAL soap EXECUTE ${ZIMBRA_HOST} ZIMBRAQAROOT /opt/qa/soapvalidator/ DIRECTORY  /opt/qa/soapvalidator/data/soapvalidator/SanityTest/ LOG /results/ SUITE SANITY
+    STAF LOCAL soap EXECUTE ${ZIMBRA_HOST_NAME} ZIMBRAQAROOT /opt/qa/soapvalidator/ DIRECTORY  /opt/qa/soapvalidator/data/soapvalidator/SanityTest/ LOG /opt/qa/results/soap-harness  SUITE SANITY
+    /bin/sleep/inifinity
 else
     echo "running ${@}"
     $@
