@@ -20,6 +20,7 @@ RUN apt-get update && \
     gettext \
     git \
     git-flow \
+    libdigest-hmac-perl \
     linux-tools-common \
     maven \
     netcat \
@@ -68,7 +69,9 @@ RUN mkdir -p /opt/qa && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && rvm install 2.0.0 --with-zlib-directory=/usr/local/rvm/usr --with-openssl-directory=/usr/local/rvm/usr' && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && gem install soap4r-spox log4r net-ldap json httpclient parseconfig' && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && rvm cleanup all' && \
-    apt-get clean
+    apt-get clean && \
+    curl -o /root/s3curl.pl  https://raw.githubusercontent.com/rtdp/s3curl/master/s3curl.pl && \
+    chmod +x /root/s3curl.pl
 
 # ************************************************************************
 # The following is required for Genesis tests to be run.
