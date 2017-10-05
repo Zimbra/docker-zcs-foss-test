@@ -54,8 +54,11 @@ cat /opt/qa/genesis/conf/genesis.conf.in | sed \
 
 # Fire up STAF
 export PATH=/usr/local/staf/bin:$PATH
-echo "starting STAF"
-/usr/local/staf/startSTAFProc.sh
+echo "starting STAF. output to /opt/qa/logs/staf.log."
+# NOTE: will see this error if you are watching the logs:
+#       STAFProcess::processMonitorThread: Error opening /dev/tty, errno: 6
+# That is OK. See: http://staf.sourceforge.net/current2x/STAFFAQ.htm#d0e332
+/usr/local/staf/startSTAFProc.sh >/opt/qa/logs/staf.log 2>&1 &
 sleep ${SLEEP_SECS}
 echo "adding STAF services"
 STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/bin/zimbrastaf.jar
@@ -72,7 +75,10 @@ done
 if [ $# -eq 0 ]
 then
     echo "running SanityTest suite"
-    STAF LOCAL soap EXECUTE ${ZIMBRA_HOST_NAME} ZIMBRAQAROOT /opt/qa/soapvalidator/ DIRECTORY  /opt/qa/soapvalidator/data/soapvalidator/SanityTest/ LOG /opt/qa/results/soap-harness  SUITE SANITY
+    STAF LOCAL soap EXECUTE ${ZIMBRA_HOST_NAME} ZIMBRAQAROOT /opt/qa/soapvalidator/ DIRECTORY  /opt/qa/soapvalidator/data/soapvalidator/SanityTest/ LOG /opt/qa/logs/soap-harness  SUITE SANITY
+    # run genesis tests
+    # archive the logs directory
+    # upload to S3
     /bin/sleep/inifinity
 else
     echo "running ${@}"
