@@ -22,6 +22,7 @@ RUN apt-get update && \
     git-flow \
     linux-tools-common \
     maven \
+    netcat \
     net-tools \
     npm \
     openjdk-8-jdk \
