@@ -62,11 +62,11 @@ STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/
 STAF local service add service LOG LIBRARY STAFLog
 
 # Wait for the Zimbra container to finish configuration
-curl -s -k https://${ZIMBRA_HOST_NAME} > /dev/null
+echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
 while [ $? -ne 0 ]; do
     echo "Waiting for ${ZIMBRA_HOST_NAME} services to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
     sleep ${SLEEP_LONG_SECS}
-    curl -s -k https://${ZIMBRA_HOST_NAME} > /dev/null
+    echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
 done
 
 if [ $# -eq 0 ]
