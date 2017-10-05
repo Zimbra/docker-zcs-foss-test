@@ -66,7 +66,7 @@ RUN mkdir -p /opt/qa && \
     gpg --keyserver keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 && \
     curl -sSL https://get.rvm.io | bash -s stable && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && rvm install 2.0.0 --with-zlib-directory=/usr/local/rvm/usr --with-openssl-directory=/usr/local/rvm/usr' && \
-    /bin/bash -c 'source /etc/profile.d/rvm.sh && gem install soap4r-spox log4r net-ldap json httpclient' && \
+    /bin/bash -c 'source /etc/profile.d/rvm.sh && gem install soap4r-spox log4r net-ldap json httpclient parseconfig' && \
     /bin/bash -c 'source /etc/profile.d/rvm.sh && rvm cleanup all' && \
     apt-get clean
 
@@ -74,6 +74,7 @@ RUN mkdir -p /opt/qa && \
 # The following is required for Genesis tests to be run.
 # 1. Disable setting that prevents users from writing to current terminal device
 # 2. Symlink in /bin/env (some genesis tests expect it to be there)
+# 3. Add STAF commands to PATH
 # ************************************************************************
 RUN sed -i.bak 's/^mesg/# mesg/' /root/.profile && \
     ln -s /usr/bin/env /bin/env && \
