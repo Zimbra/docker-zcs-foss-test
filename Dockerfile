@@ -51,8 +51,8 @@ RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-2017
 RUN mkdir -p /opt/qa && \
     mkdir -p /opt/qa/logs/soap-harness && \
     mkdir -p /opt/qa/logs/genesis && \
-    tar xzvf /tmp/soapvalidator-20171004.tar.gz -C /opt/qa/ && \
-    tar xvf /tmp/genesis-20171004.tar -C /opt/qa/ && \
+    tar xzf /tmp/soapvalidator-20171004.tar.gz -C /opt/qa/ && \
+    tar xf /tmp/genesis-20171004.tar -C /opt/qa/ && \
     cp /tmp/genesis-20171004.conf /opt/qa/genesis/conf/genesis.conf.in && \
     chmod +x /tmp/STAF3426-setup-linux-amd64-NoJVM.bin && \
     /tmp/STAF3426-setup-linux-amd64-NoJVM.bin -i silent \
