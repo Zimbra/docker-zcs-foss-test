@@ -45,13 +45,13 @@ WORKDIR /tmp
 # Some of the libraries included with STAF are wonky and will bork normal commands
 # if they are loaded first.
 RUN curl -L -O http://downloads.sourceforge.net/project/staf/staf/V3.4.26/STAF3426-setup-linux-amd64-NoJVM.bin
-RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/soapvalidator-20171004.tar.gz
+RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/soapvalidator-20171005.tar.gz
 RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-20171004.tar
 RUN curl -k -L -O https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-20171004.conf
 RUN mkdir -p /opt/qa && \
     mkdir -p /opt/qa/logs/soap-harness && \
     mkdir -p /opt/qa/logs/genesis && \
-    tar xzf /tmp/soapvalidator-20171004.tar.gz -C /opt/qa/ && \
+    tar xzf /tmp/soapvalidator-20171005.tar.gz -C /opt/qa/ && \
     tar xf /tmp/genesis-20171004.tar -C /opt/qa/ && \
     cp /tmp/genesis-20171004.conf /opt/qa/genesis/conf/genesis.conf.in && \
     chmod +x /tmp/STAF3426-setup-linux-amd64-NoJVM.bin && \
