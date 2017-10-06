@@ -12,6 +12,8 @@ services:
       placement:
         constraints:
           - node.role == worker
+      restart_policy:
+        condition: none
     entrypoint:
       - /zimbra/init
     env_file: .env
@@ -44,6 +46,8 @@ services:
       placement:
         constraints:
           - node.role == worker
+      restart_policy:
+        condition: none
     depends_on:
       - zimbra
     entrypoint:
