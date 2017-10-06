@@ -118,7 +118,8 @@ function archive_and_upload_logs {
     cd /opt/qa
     archive="$(date +'%Y%m%dT%H%M%S%z').tar.gz"
     tar cfz "${archive}" logs/
-    s3_path="s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss/${archive}"
+    s3_name=$(echo "${archive}" | sed -e 's/+/%2b/')
+    s3_path="s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss/${s3_name}"
 
     echo "Attempting to uplaod ${archive} to ${s3_path}..."
     /root/s3curl.pl --id=test --acl=public-read --put="${archive}" https://${s3_path}
