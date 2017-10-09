@@ -3,7 +3,7 @@ version: "3.3"
 services:
   zimbra:
     # image: localhost:5000/zcs-foss
-    image: zimbra/zcs-foss:genesis
+    image: zimbra/zcs-foss:latest
     deploy:
       mode: replicated
       endpoint_mode: dnsrr
