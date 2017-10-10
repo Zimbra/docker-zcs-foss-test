@@ -54,6 +54,7 @@ RUN mkdir -p /opt/qa && \
     tar xzf /tmp/soapvalidator-20171005.tar.gz -C /opt/qa/ && \
     tar xf /tmp/genesis-20171004.tar -C /opt/qa/ && \
     cp /tmp/genesis-20171004.conf /opt/qa/genesis/conf/genesis.conf.in && \
+    sync && \
     chmod +x /tmp/STAF3426-setup-linux-amd64-NoJVM.bin && \
     /tmp/STAF3426-setup-linux-amd64-NoJVM.bin -i silent \
        -DACCEPT_LICENSE=1 \
