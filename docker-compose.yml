@@ -2,11 +2,14 @@ version: "3.3"
 
 services:
   test:
-    # image: localhost:5000/zcs-foss-test
-    image: zimbra/zcs-foss-test:single-node
+    image: zimbra/zcs-foss-test:multi-node
     build:
       context: "./"
       dockerfile: "./Dockerfile"
+    configs:
+      - source: init_test
+        target: /zimbra/init
+        mode: 0777
     deploy:
       mode: replicated
       replicas: 1
@@ -14,8 +17,9 @@ services:
         condition: none
     depends_on:
       - zimbra
+      - mailbox
     entrypoint:
-      - /opt/qa/init
+      - /zimbra/init
       - --shutdown
       - "no"
     env_file: .env
@@ -83,6 +87,8 @@ configs:
     file: ./zcs-foss/configs/init-zimbra
   config_zimbra:
     file: ./zcs-foss/configs/config-zimbra
+  init_test:
+    file: ./configs/init-test
 networks:
   default:
     driver: overlay

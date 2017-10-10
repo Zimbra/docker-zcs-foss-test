@@ -183,12 +183,12 @@ function setup {
     STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/bin/zimbrastaf.jar
     STAF local service add service LOG LIBRARY STAFLog
 
-    # Wait for the Zimbra container to finish configuration
-    echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
+    # Wait for the mailbox service to finish configuration
+    curl -k https://mailbox:8443 > /dev/null 2>&1
     while [ $? -ne 0 ]; do
-        echo "Waiting for ${ZIMBRA_HOST_NAME} services to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
+        echo "Waiting for the mailbox service to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
         sleep ${SLEEP_LONG_SECS}
-        echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
+        curl -k https://mailbox:8443 > /dev/null 2>&1
     done
     touch ${setup_complete_flag}
 }
