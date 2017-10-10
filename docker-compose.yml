@@ -10,6 +10,9 @@ services:
       - source: init_test
         target: /zimbra/init
         mode: 0777
+      - source: init_common
+        target: /zimbra/init-common
+        mode: 0777
     deploy:
       mode: replicated
       replicas: 1
