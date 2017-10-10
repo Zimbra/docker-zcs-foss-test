@@ -1,26 +1,5 @@
 #!/bin/bash
-# Perform runtime initialization of container. As part of that
-# the file /opt/zimbra/qa/global.properties.in is used as a template
-# from which the file /opt/zimbra/qa/global.properties is created.
-#
-# Expects the following envirnment variables to be present:
-#   ZIMBRA_HOST_NAME
-#   ZIMBRA_DEFAULT_DOMAIN
-#   ADMIN_PW
-#
-# By default, the SanityTest suite will be run and the container will shut down.
-# If, instead, additional argument(s) are provided to this script, then the initial
-# configuration setup will still be performed, STAF will be started and the local
-# services added, but instead of executing the SanityTest and exiting, the
-# additional arguments will be executed.  For example, if this script is 
-# called as follows (it will be installed in the container at /opt/qa/init)...
-#
-#   /opt/qa/init /bin/sleep inifinity
-#
-# ...then the container will be brought up and initialized, but won't do anything
-# automatically.  You can then connect to the container (docker exec -it soap bash)
-# and manually run individual tests.
-# 
+source /zimbra/init-common
 
 run_soap=no
 run_genesis=no
@@ -139,27 +118,14 @@ function setup {
     if [ -f /run/secrets/dot-s3curl ]; then
         cp /run/secrets/dot-s3curl ${s3curl_config_path} && chmod 400 ${s3curl_config_path}
     fi
+    zimbra_ip=$(wait_for_service zimbra)
+    mailbox_ip=$(wait_for_service mailbox)
+    zimbra_fqdn="${ZIMBRA_HOST_NAME}"
+    mailbox_fqdn="${MAILBOX_HOST_NAME}.${ZIMBRA_DEFAULT_DOMAIN}"
+    add_host_entry ${zimbra_fqdn} ${zimbra_ip}
+    add_host_entry ${mailbox_fqdn} ${mailbox_ip}
 
-    SLEEP_SECS=10
-    SLEEP_LONG_SECS=60
-    ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
-    while [ "${ZIMBRA_HOST_IP}x" = "x" ]; do
-        echo "Waiting for zimbra container to start"
-        sleep ${SLEEP_SECS}
-        ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
-    done
-
-    # Add entry in /etc/hosts from ZIMBRA_HOST_NAME
-    # First check to make sure it hasn't already been appliec
-    grep -q "${ZIMBRA_HOST_NAME}" /etc/hosts
-    if [ $? != 0 ]; then
-        echo "Adding mapping for ${ZIMBRA_HOST_NAME} to ${ZIMBRA_HOST_IP} in /etc/hosts"
-        echo -e "${ZIMBRA_HOST_IP}\t${ZIMBRA_HOST_NAME}" >> /etc/hosts
-    else
-        echo "An entry for ${ZIMBRA_HOST_NAME} is already present in /etc/hosts"
-    fi
-
-    # Update the config files
+    # Update the config files for saoap-harness and genesis
     echo "updating soap-harness config"
     cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
