@@ -74,15 +74,15 @@ services:
 
 configs:
   init_common:
-    file: ./configs/init-common
+    file: ./zcs-foss/configs/init-common
   init_mailbox:
-    file: ./configs/init-mailbox
+    file: ./zcs-foss/configs/init-mailbox
   config_mailbox:
-    file: ./configs/config-mailbox
+    file: ./zcs-foss/configs/config-mailbox
   init_zimbra:
-    file: ./configs/init-zimbra
+    file: ./zcs-foss/configs/init-zimbra
   config_zimbra:
-    file: ./configs/config-zimbra
+    file: ./zcs-foss/configs/config-zimbra
 networks:
   default:
     driver: overlay
@@ -90,3 +90,4 @@ networks:
 secrets:
   dot-s3curl:
     external: true
+
