@@ -1,0 +1,4 @@
+[submodule "zcs-foss"]
+	path = zcs-foss
+	url = https://github.com/Zimbra/docker-zcs-foss.git
+	branch = feature/multi-node
