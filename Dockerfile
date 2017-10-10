@@ -84,6 +84,3 @@ RUN sed -i.bak 's/^mesg/# mesg/' /root/.profile && \
     ln -s /usr/bin/env /bin/env && \
     echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
 
-COPY ./init-test-container /opt/qa/init
-RUN  chmod +x /opt/qa/init
-ENTRYPOINT ["/opt/qa/init"]
