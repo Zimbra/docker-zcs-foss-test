@@ -1,38 +1,6 @@
 version: "3.3"
 
 services:
-  zimbra:
-    # image: localhost:5000/zcs-foss
-    image: zimbra/zcs-foss:latest
-    deploy:
-      mode: replicated
-      endpoint_mode: dnsrr
-      # endpoint_mode: vip
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == worker
-      restart_policy:
-        condition: none
-    entrypoint:
-      - /zimbra/init
-    env_file: .env
-# NOTE: if you want to be able to expose these ports to the ingress network so that
-#       you can, for example, log into Zimbra via a web browser from the host machine,
-#       you have comment out the following and also change the endpoint_mode
-#       for the zimbra_container (above) to vip instead of dnsrr.
-#
-#       This is not done by default because the test container needs to be able
-#       to access the actual IP address of the single zimbra container.
-#       In vip mode, you get the IP address of the mesh routing service and NOT
-#       the IP address of the actual Zimbra node.
-#    ports:
-#      - "7071:7071"
-#      - "142:143"
-#      - "443:443"
-#      - "993:993"
-    hostname: zimbra
-
   test:
     # image: localhost:5000/zcs-foss-test
     image: zimbra/zcs-foss-test
@@ -41,23 +9,13 @@ services:
       dockerfile: "./Dockerfile"
     deploy:
       mode: replicated
-      endpoint_mode: dnsrr
       replicas: 1
-      placement:
-        constraints:
-          - node.role == worker
       restart_policy:
         condition: none
     depends_on:
       - zimbra
     entrypoint:
       - /opt/qa/init
-      - --run-genesis
-      - "yes"
-      - --genesis-case
-      - "imap/create.rb"
-      - --upload-logs
-      - "yes"
       - --shutdown
       - "no"
     env_file: .env
@@ -68,9 +26,6 @@ services:
 networks:
   default:
     driver: overlay
-    ipam:
-      config:
-        - subnet: 10.0.1.0/24
 
 secrets:
   dot-s3curl:
