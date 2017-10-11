@@ -95,6 +95,9 @@ configs:
 networks:
   default:
     driver: overlay
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
 
 secrets:
   dot-s3curl:
