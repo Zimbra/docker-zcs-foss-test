@@ -150,12 +150,9 @@ function setup {
     STAF local service add service LOG LIBRARY STAFLog
 
     # Wait for the mailbox service to finish configuration
-    curl -k https://mailbox:8443 > /dev/null 2>&1
-    while [ $? -ne 0 ]; do
-        echo "Waiting for the mailbox service to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
-        sleep ${SLEEP_LONG_SECS}
-        curl -k https://mailbox:8443 > /dev/null 2>&1
-    done
+    # We do this by waiting for STAF to come up, as that is the last service
+    # that is brought up.
+    wait_for_staf "${mailbox_fqdn}"
     touch ${setup_complete_flag}
 }
 
