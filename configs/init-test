@@ -36,7 +36,7 @@ function usage {
     echo "                          ${genesis_plan_prefix}/"
     echo "--shutdown yes|no         (default=yes) If yes, allow this script to end when it has finished working."
     echo "                          Since this script is the normal entrypoint, if you want it to just sleep"
-    echo "                          instead of exiting, pass in a value of "no" for this and your test container"
+    echo '                          instead of exiting, pass in a value of "no" for this and your test container'
     echo "                          will stay running so you can log in and run more tests."
     echo "-h|--help                 Print help message and exit"
 
@@ -120,6 +120,8 @@ function setup {
     fi
     zimbra_ip=$(wait_for_service zimbra)
     mailbox_ip=$(wait_for_service mailbox)
+
+    echo "zimbra service IP=${zimbra_ip}, mailbox service IP=${mailbox_ip}"
     zimbra_fqdn="${ZIMBRA_HOST_NAME}"
     mailbox_fqdn="${MAILBOX_HOST_NAME}.${ZIMBRA_DEFAULT_DOMAIN}"
     add_host_entry ${zimbra_fqdn} ${zimbra_ip}
