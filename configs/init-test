@@ -1,6 +1,19 @@
 #!/bin/bash
 source /zimbra/init-common
 
+# This is the default path that the tests results will be uploaded to in S3.
+# The final component of the pathname will be auto-generated with a date/time stamp
+# Here is an example of what the entire upload URL (used by s3curl) might look like:
+#   https://s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss-multi/20171008T200524+0000.tar.gz
+# So this is:
+#   https://s3.amazonaws.com/<s3-path>/<generated-archive-name>
+# Note: The upload function will replace the `+` in the name with `%2b` so that the end
+#       result is correct.
+# You can override the default path by specifying an environment variable
+# `S3_PATH`.  It should not contain any leading or trailing slashes.  The part before the first `/`
+# should be the name of the bucket.
+S3_PATH_DEFAULT="docker.zimbra.com/tests/zcs-foss-multi"
+
 run_soap=no
 run_genesis=no
 upload_logs=no
@@ -98,7 +111,11 @@ function archive_and_upload_logs {
     archive="$(date +'%Y%m%dT%H%M%S%z').tar.gz"
     tar cfz "${archive}" logs/
     s3_name=$(echo "${archive}" | sed -e 's/+/%2b/')
-    s3_path="s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss/${s3_name}"
+    s3_path_prefix="${S3_PATH_DEFAULT}"
+    if [ "${S3_PATH}x" != "x" ]; then
+        s3_path_prefix="${S3_PATH}"
+    fi
+    s3_path="s3.amazonaws.com/${s3_path_prefix}/${s3_name}"
 
     echo "Attempting to uplaod ${archive} to ${s3_path}..."
     /root/s3curl.pl --id=test --acl=public-read --put="${archive}" https://${s3_path}

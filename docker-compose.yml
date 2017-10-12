@@ -26,6 +26,11 @@ services:
       - --shutdown
       - "no"
     env_file: .env
+    # The default value of S3_PATH is:
+    #   S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+    # See comments in configs/init-test for more details.
+    environment:
+      S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
     hostname: test
     secrets:
       - dot-s3curl
