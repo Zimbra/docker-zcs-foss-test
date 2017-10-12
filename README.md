@@ -16,7 +16,19 @@ This will give you a single-node swarm and it will work fine.
     rwn37e476d9tdtwate60o00o9 *   moby                Ready               Active              Leader
 
 
-The notes that follow assume you have an available swarm and that your shell is configured to talk to it.
+**Note:**
+
+Just added placement constraints so you can control which nodes in your swarm that we are allowed to deploy this stack to.  The constraint is that the node(s) have a label `zimbra=true`.  The reason for this is that when you are deploying into a test swarm in EC2, you may have certain nodes (like the `manager`) with fewer system resources than the `worker` nodes.
+
+In that case you could just specify a constraint like this: `node.role == worker`.  That would work fine in the above-mentioned hypothetical situation.  But if you are testing in a local (single-node) swarm as described above, the `node.role` constraint would not be satisfied, because in a single-node swarm, the node has the `manager` role.
+
+One easy solution that works in both deployment environments is via the use of labels.  So, before you deploy, just update the node (or nodes) upon which you wish to deploy the stack to as follows:
+
+	docker node update --label-add zimbra=true <node-id>
+
+So do that first, either to your _only_ node in the case of your simple, local swarm setup.  Or apply the label to the nodes in your larger swarm as applicable.
+
+The notes that follow assume you have an available swarm (with node labels assigned) and that your shell is configured to talk to it.
 
 ### Setup
 
@@ -88,7 +100,31 @@ You can, of course, update the `docker-compose.yml` file to have the `test` serv
 
 ### Secret
 
-Currently if you run `/zimbra/init` on the test container with `--upload-logs yes` it is set to upload to a particular bucket.  You probably don't have an access key id and secret access key that will give you access to that bucket.  (TODO - make destination configurable). But if you do, this is the format of the secret file:
+Currently if you run `/zimbra/init` on the test container with `--upload-logs yes` it is set to upload to a particular bucket and path. From the `docker-compose.yml file`:
+
+    # The default value of S3_PATH is:
+    #   S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+    # See comments in configs/init-test for more details.
+    environment:
+      S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+
+And the further notes in `config/init-test`:
+
+    # This is the default path that the tests results will be uploaded to in S3.
+    # The final component of the pathname will be auto-generated with a date/time stamp
+    # Here is an example of what the entire upload URL (used by s3curl) might look like:
+    #   https://s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss-multi/20171008T200524+0000.tar.gz
+    # So this is:
+    #   https://s3.amazonaws.com/<s3-path>/<generated-archive-name>
+    # Note: The upload function will replace the `+` in the name with `%2b` so that the end
+    #       result is correct.
+    # You can override the default path by specifying an environment variable
+    # `S3_PATH`.  It should not contain any leading or trailing slashes.  The part before the first `/`
+    # should be the name of the bucket.
+    S3_PATH_DEFAULT="docker.zimbra.com/tests/zcs-foss-multi"
+
+
+If you do not have a suitable bucket in S3 and creds to access it, this is the format of the secret file:
 
     %awsSecretAccessKeys = (
         test => {
@@ -104,4 +140,4 @@ Install the secret into the swarm before deploying the stack as follows:
 
 	docker secret create dot-s3curl <path-to-secret-file>
 
-If you don't have an id/key that will work, just comment out the lines in the `docker-compose.yml` file as describe above in step 5 of _Setup_.
+If you don't have an id/key that will work, just comment out the lines in the `docker-compose.yml` file as described above in step 5 of _Setup_.
