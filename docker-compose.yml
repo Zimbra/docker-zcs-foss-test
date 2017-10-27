@@ -9,9 +9,6 @@ services:
       endpoint_mode: dnsrr
       # endpoint_mode: vip
       replicas: 1
-      placement:
-        constraints:
-          - node.role == worker
       restart_policy:
         condition: none
     entrypoint:
@@ -43,9 +40,6 @@ services:
       mode: replicated
       endpoint_mode: dnsrr
       replicas: 1
-      placement:
-        constraints:
-          - node.role == worker
       restart_policy:
         condition: none
     depends_on:
