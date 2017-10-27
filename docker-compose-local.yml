@@ -25,7 +25,7 @@ services:
 
   test:
     # image: localhost:5000/zcs-foss-test
-    image: zimbra/zcs-foss-test
+    image: zimbra/zcs-foss-test:single-node
     build:
       context: "./"
       dockerfile: "./Dockerfile"

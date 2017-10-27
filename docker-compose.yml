@@ -32,7 +32,7 @@ services:
 
   test:
     # image: localhost:5000/zcs-foss-test
-    image: zimbra/zcs-foss-test
+    image: zimbra/zcs-foss-test:single-node
     build:
       context: "./"
       dockerfile: "./Dockerfile"
@@ -46,12 +46,6 @@ services:
       - zimbra
     entrypoint:
       - /opt/qa/init
-      - --run-genesis
-      - "yes"
-      - --genesis-case
-      - "imap/create.rb"
-      - --upload-logs
-      - "yes"
       - --shutdown
       - "no"
     env_file: .env
