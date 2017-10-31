@@ -164,6 +164,7 @@ function setup {
     cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
       -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
+      -e "s/MAILBOX_SERVICE_NAME/${MAILBOX_SERVICE_NAME}/" \
       -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
     cat /opt/qa/genesis/conf/genesis.conf.template | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \

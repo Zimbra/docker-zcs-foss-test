@@ -1,7 +1,4 @@
 # NOTE: No quotes around the following:
-# This is the password for the bind server webadmin interface, which
-# is exposed to the host at port 10000.  Username is root
-ROOT_PASSWORD=password
 # Timezone settings for tzdata.
 # NOTE: Make sure these are compatible with the TIME_ZONE_ID shown below.
 #       Genesis tests rquire PDT
@@ -17,6 +14,7 @@ ZIMBRA_DEFAULT_DOMAIN=zimbra.zcs-foss.test
 #       the Genesis test suite is that the zmhostname
 #       _matches_ the default domain name...
 ZIMBRA_HOST_NAME=zimbra.zcs-foss.test
+MAILBOX_SERVICE_NAME=zimbra
 TIME_ZONE_ID=PDT
 ADMIN_PW=test123
 LDAP_ADMIN_PW=zimbra
