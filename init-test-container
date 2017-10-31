@@ -33,7 +33,7 @@ genesis_case_prefix=data
 genesis_case=
 # The complete genesis plan path will by "${genesis_plan_prefix}/${genesis_plan}"
 genesis_plan_prefix=conf/genesis
-genesis_plan=smokeoss.txt
+genesis_plan=multinodefossuat.txt
 shutdown=yes
 s3curl_config_path=/root/.s3curl
 have_s3curl_config=no
