@@ -31,6 +31,8 @@ services:
     # See comments in configs/init-test for more details.
     environment:
       S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+      ADMIN_PORT: "9071"
+      SOAPSERVICE_PORT: "8443"
     hostname: test
     secrets:
       - dot-s3curl
