@@ -25,7 +25,7 @@ genesis_case_prefix=data
 genesis_case=
 # The complete genesis plan path will by "${genesis_plan_prefix}/${genesis_plan}"
 genesis_plan_prefix=conf/genesis
-genesis_plan=multinodefossuat.txt
+genesis_plan=HA/UATmultinodefoss.txt
 shutdown=yes
 s3curl_config_path=/root/.s3curl
 have_s3curl_config=no
@@ -146,10 +146,13 @@ function setup {
 
     # Update the config files for saoap-harness and genesis
     echo "updating soap-harness config"
+    MAILBOX_SERVICE_NAME=${MAILBOX_HOST_NAME}
     cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
       -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
       -e "s/MAILBOX_SERVICE_NAME/${MAILBOX_SERVICE_NAME}/" \
+      -e "s/ADMIN_PORT/${ADMIN_PORT}/" \
+      -e "s/SOAPSERVICE_PORT/${SOAPSERVICE_PORT}/" \
       -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
     cat /opt/qa/genesis/conf/genesis.conf.template | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
