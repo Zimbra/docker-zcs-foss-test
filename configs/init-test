@@ -146,11 +146,10 @@ function setup {
 
     # Update the config files for saoap-harness and genesis
     echo "updating soap-harness config"
-    MAILBOX_SERVICE_NAME=${MAILBOX_HOST_NAME}
     cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
       -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
-      -e "s/MAILBOX_SERVICE_NAME/${MAILBOX_SERVICE_NAME}/" \
+      -e "s/MAILBOX_SERVICE_NAME/${mailbox_fqdn}/" \
       -e "s/ADMIN_PORT/${ADMIN_PORT}/" \
       -e "s/SOAPSERVICE_PORT/${SOAPSERVICE_PORT}/" \
       -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
