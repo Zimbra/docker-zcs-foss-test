@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   test:
-    image: zimbra/zcs-foss-test:multi-node
+    image: zimbra/zcs-foss-test:latest
     build:
       context: "./"
       dockerfile: "./Dockerfile"
