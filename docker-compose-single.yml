@@ -1,0 +1,83 @@
+version: "3.3"
+
+services:
+  test:
+    image: zimbra/zcs-foss-test:multi-node
+    build:
+      context: "./"
+      dockerfile: "./Dockerfile"
+    configs:
+      - source: init_test
+        target: /zimbra/init
+        mode: 0777
+      - source: init_common
+        target: /zimbra/init-common
+        mode: 0777
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    depends_on:
+      - zimbra
+      - mailbox
+    entrypoint:
+      - /zimbra/init
+      - --shutdown
+      - "no"
+    env_file: .env
+    # The default value of S3_PATH is:
+    #   S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+    # See comments in configs/init-test for more details.
+    environment:
+      S3_PATH: docker.zimbra.com/tests/zcs-foss-multi
+      ADMIN_PORT: "9071"
+      SOAPSERVICE_PORT: "8443"
+    hostname: test
+    secrets:
+      - dot-s3curl
+
+  zimbra:
+    image: zimbra/zcs-foss-base:latest
+    configs:
+      - source: init_common
+        target: /zimbra/init-common
+        mode: 0777
+      - source: init_zimbra
+        target: /zimbra/init
+        mode: 0777
+      - source: config_zimbra
+        target: /zimbra/config.in
+        mode: 0666
+    env_file: .env
+    entrypoint:
+      - /zimbra/init
+    hostname: ${ZIMBRA_HOST_NAME}
+    networks:
+      - default
+    ports:
+      - "7071:7071"
+      - "8143:143"
+      - "8443:443"
+      - "8993:993"
+
+configs:
+  init_common:
+    file: ./zcs-foss/configs/init-common
+  init_zimbra:
+    file: ./zcs-foss/configs/init-zimbra-single
+  config_zimbra:
+    file: ./zcs-foss/configs/config-zimbra-single
+  init_test:
+    file: ./configs/init-test-single
+networks:
+  default:
+    driver: overlay
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
+
+secrets:
+  dot-s3curl:
+    external: true
+

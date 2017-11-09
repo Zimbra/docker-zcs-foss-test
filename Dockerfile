@@ -45,8 +45,8 @@ WORKDIR /tmp
 # Some of the libraries included with STAF are wonky and will bork normal commands
 # if they are loaded first.
 RUN curl -L -O http://downloads.sourceforge.net/project/staf/staf/V3.4.26/STAF3426-setup-linux-amd64-NoJVM.bin
-RUN curl -k -L -o soapvalidator.tar.gz https://docker.zimbra.com.s3.amazonaws.com/assets/soapvalidator-20171027.tar.gz
-RUN curl -k -L -o genesis.tar https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-20171027.tar
+RUN curl -k -L -o soapvalidator.tar.gz https://docker.zimbra.com.s3.amazonaws.com/assets/soapvalidator-20171107.tar.gz
+RUN curl -k -L -o genesis.tar https://docker.zimbra.com.s3.amazonaws.com/assets/genesis-20171102.tar
 RUN mkdir -p /opt/qa && \
     mkdir -p /opt/qa/logs/soap-harness && \
     mkdir -p /opt/qa/logs/genesis && \
@@ -82,6 +82,3 @@ RUN sed -i.bak 's/^mesg/# mesg/' /root/.profile && \
     ln -s /usr/bin/env /bin/env && \
     echo 'PATH=/usr/local/staf/bin:$PATH' >> /root/.bashrc
 
-COPY ./init-test-container /opt/qa/init
-RUN  chmod +x /opt/qa/init
-ENTRYPOINT ["/opt/qa/init"]

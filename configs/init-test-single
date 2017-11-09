@@ -1,26 +1,18 @@
 #!/bin/bash
-# Perform runtime initialization of container. As part of that
-# the file /opt/zimbra/qa/global.properties.in is used as a template
-# from which the file /opt/zimbra/qa/global.properties is created.
-#
-# Expects the following envirnment variables to be present:
-#   ZIMBRA_HOST_NAME
-#   ZIMBRA_DEFAULT_DOMAIN
-#   ADMIN_PW
-#
-# By default, the SanityTest suite will be run and the container will shut down.
-# If, instead, additional argument(s) are provided to this script, then the initial
-# configuration setup will still be performed, STAF will be started and the local
-# services added, but instead of executing the SanityTest and exiting, the
-# additional arguments will be executed.  For example, if this script is 
-# called as follows (it will be installed in the container at /opt/qa/init)...
-#
-#   /opt/qa/init /bin/sleep inifinity
-#
-# ...then the container will be brought up and initialized, but won't do anything
-# automatically.  You can then connect to the container (docker exec -it soap bash)
-# and manually run individual tests.
-# 
+source /zimbra/init-common
+
+# This is the default path that the tests results will be uploaded to in S3.
+# The final component of the pathname will be auto-generated with a date/time stamp
+# Here is an example of what the entire upload URL (used by s3curl) might look like:
+#   https://s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss-multi/20171008T200524+0000.tar.gz
+# So this is:
+#   https://s3.amazonaws.com/<s3-path>/<generated-archive-name>
+# Note: The upload function will replace the `+` in the name with `%2b` so that the end
+#       result is correct.
+# You can override the default path by specifying an environment variable
+# `S3_PATH`.  It should not contain any leading or trailing slashes.  The part before the first `/`
+# should be the name of the bucket.
+S3_PATH_DEFAULT="docker.zimbra.com/tests/zcs-foss-multi"
 
 run_soap=no
 run_genesis=no
@@ -33,7 +25,7 @@ genesis_case_prefix=data
 genesis_case=
 # The complete genesis plan path will by "${genesis_plan_prefix}/${genesis_plan}"
 genesis_plan_prefix=conf/genesis
-genesis_plan=multinodefossuat.txt
+genesis_plan=HA/UATmultinodefoss.txt
 shutdown=yes
 s3curl_config_path=/root/.s3curl
 have_s3curl_config=no
@@ -57,7 +49,7 @@ function usage {
     echo "                          ${genesis_plan_prefix}/"
     echo "--shutdown yes|no         (default=yes) If yes, allow this script to end when it has finished working."
     echo "                          Since this script is the normal entrypoint, if you want it to just sleep"
-    echo "                          instead of exiting, pass in a value of "no" for this and your test container"
+    echo '                          instead of exiting, pass in a value of "no" for this and your test container'
     echo "                          will stay running so you can log in and run more tests."
     echo "-h|--help                 Print help message and exit"
 
@@ -119,7 +111,11 @@ function archive_and_upload_logs {
     archive="$(date +'%Y%m%dT%H%M%S%z').tar.gz"
     tar cfz "${archive}" logs/
     s3_name=$(echo "${archive}" | sed -e 's/+/%2b/')
-    s3_path="s3.amazonaws.com/docker.zimbra.com/tests/zcs-foss/${s3_name}"
+    s3_path_prefix="${S3_PATH_DEFAULT}"
+    if [ "${S3_PATH}x" != "x" ]; then
+        s3_path_prefix="${S3_PATH}"
+    fi
+    s3_path="s3.amazonaws.com/${s3_path_prefix}/${s3_name}"
 
     echo "Attempting to uplaod ${archive} to ${s3_path}..."
     /root/s3curl.pl --id=test --acl=public-read --put="${archive}" https://${s3_path}
@@ -139,32 +135,20 @@ function setup {
     if [ -f /run/secrets/dot-s3curl ]; then
         cp /run/secrets/dot-s3curl ${s3curl_config_path} && chmod 400 ${s3curl_config_path}
     fi
+    zimbra_ip=$(wait_for_service zimbra)
 
-    SLEEP_SECS=10
-    SLEEP_LONG_SECS=60
-    ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
-    while [ "${ZIMBRA_HOST_IP}x" = "x" ]; do
-        echo "Waiting for zimbra container to start"
-        sleep ${SLEEP_SECS}
-        ZIMBRA_HOST_IP=$(getent hosts zimbra | awk '{print $1}')
-    done
+    echo "zimbra service IP=${zimbra_ip}"
+    zimbra_fqdn="${ZIMBRA_HOST_NAME}"
+    add_host_entry ${zimbra_fqdn} ${zimbra_ip}
 
-    # Add entry in /etc/hosts from ZIMBRA_HOST_NAME
-    # First check to make sure it hasn't already been appliec
-    grep -q "${ZIMBRA_HOST_NAME}" /etc/hosts
-    if [ $? != 0 ]; then
-        echo "Adding mapping for ${ZIMBRA_HOST_NAME} to ${ZIMBRA_HOST_IP} in /etc/hosts"
-        echo -e "${ZIMBRA_HOST_IP}\t${ZIMBRA_HOST_NAME}" >> /etc/hosts
-    else
-        echo "An entry for ${ZIMBRA_HOST_NAME} is already present in /etc/hosts"
-    fi
-
-    # Update the config files
+    # Update the config files for saoap-harness and genesis
     echo "updating soap-harness config"
     cat /opt/qa/soapvalidator/conf/global.properties.in | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
       -e "s/ZIMBRA_DEFAULT_DOMAIN/${ZIMBRA_DEFAULT_DOMAIN}/" \
-      -e "s/MAILBOX_SERVICE_NAME/${MAILBOX_SERVICE_NAME}/" \
+      -e "s/MAILBOX_SERVICE_NAME/${zimbra_fqdn}/" \
+      -e "s/ADMIN_PORT/${ADMIN_PORT}/" \
+      -e "s/SOAPSERVICE_PORT/${SOAPSERVICE_PORT}/" \
       -e "s/ADMIN_PW/${ADMIN_PW}/" > /opt/qa/soapvalidator/conf/global.properties
     cat /opt/qa/genesis/conf/genesis.conf.template | sed \
       -e "s/ZIMBRA_HOST_NAME/${ZIMBRA_HOST_NAME}/" \
@@ -183,13 +167,10 @@ function setup {
     STAF local service add service SOAP LIBRARY JSTAF EXECUTE /opt/qa/soapvalidator/bin/zimbrastaf.jar
     STAF local service add service LOG LIBRARY STAFLog
 
-    # Wait for the Zimbra container to finish configuration
-    echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
-    while [ $? -ne 0 ]; do
-        echo "Waiting for ${ZIMBRA_HOST_NAME} services to come up.  Sleeping for ${SLEEP_LONG_SECS} seconds..."
-        sleep ${SLEEP_LONG_SECS}
-        echo "OK" | nc -q 1 ${ZIMBRA_HOST_NAME} 6500 2>/dev/null
-    done
+    # Wait for the mailbox service to finish configuration
+    # We do this by waiting for STAF to come up, as that is the last service
+    # that is brought up.
+    wait_for_staf "${zimbra_fqdn}"
     touch ${setup_complete_flag}
 }
 
