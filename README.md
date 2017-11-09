@@ -1,7 +1,9 @@
 ### Introduction
 
+Provides the following testing services against a ZCS (single or multi-node) cluster:
 
-This project will let you deploy a non-HA, multi-node, Zimbra install into a Docker Swarm and execute a series of tests against the container.
+* SOAP-Harness SanityTest suite
+* Genesis test suite
 
 ### Prerequisites
 
@@ -15,43 +17,29 @@ This will give you a single-node swarm and it will work fine.
     ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS
     rwn37e476d9tdtwate60o00o9 *   moby                Ready               Active              Leader
 
-
-**Note:**
-
-Just added placement constraints so you can control which nodes in your swarm that we are allowed to deploy this stack to.  The constraint is that the node(s) have a label `zimbra=true`.  The reason for this is that when you are deploying into a test swarm in EC2, you may have certain nodes (like the `manager`) with fewer system resources than the `worker` nodes.
-
-In that case you could just specify a constraint like this: `node.role == worker`.  That would work fine in the above-mentioned hypothetical situation.  But if you are testing in a local (single-node) swarm as described above, the `node.role` constraint would not be satisfied, because in a single-node swarm, the node has the `manager` role.
-
-One easy solution that works in both deployment environments is via the use of labels.  So, before you deploy, just update the node (or nodes) upon which you wish to deploy the stack to as follows:
-
-	docker node update --label-add zimbra=true <node-id>
-
-So do that first, either to your _only_ node in the case of your simple, local swarm setup.  Or apply the label to the nodes in your larger swarm as applicable.
-
-The notes that follow assume you have an available swarm (with node labels assigned) and that your shell is configured to talk to it.
-
 ### Setup
 
 1. Clone this repo. Then `cd` into the repo directory.
-2. Check out the `feature/multi-node` branch.
-3. Initialize the submodule: `git submodule update --init --recursive`
-4. Create an environment (`.env`) file: `cp zcs-foss/DOT-env .env`
-5. [optional] Register a _secret_ in your swarm (see _Secret_ below). If you don't, please comment out these lines in the `docker-compose.yml` file, as follows:
+2. Initialize the submodule: `git submodule update --init --recursive`
+3. Create an environment (`.env`) file: `cp zcs-foss/DOT-env .env`
+4. [optional] Register a _secret_ in your swarm (see _Secret_ below). If you don't, please comment out these lines in the `docker-compose.yml` file, as follows:
 
         #    secrets:
         #      - dot-s3curl
-
-6. That's it.
 
 ### Deploying the Stack
 
 Assuming you have satisfied the _Prerequisites_ and completed the _Setup_:
 
-	docker stack deploy -c docker-compose.yml <stack-name>
+	docker stack deploy -c docker-compose-single.yml <stack-name>
+
+or:
+
+	docker stack deploy -c docker-compose-multi.yml <stack-name>
 
 Example:
 
-	docker stack deploy -c docker-compose.yml zcs
+	docker stack deploy -c docker-compose-multi.yml zcs
 
 ### Controlling what happens when you deploy the stack
 
@@ -69,25 +57,26 @@ By default all this will do is initialize the `test` service, update the configu
 
     /zimbra/init [ARGS]
 
-    where ARGS may be any of the following:
-    --run-soap yes|no         (default=no) run soap-harness tests
-    --run-genesis yes|no      (default=no) run genesis tests
-    --upload-logs yes|no      (default=no) archive and upload test log files
-    --soap <test>             If specified, run this test instead of the default (SanityTest/)
-                              The value specified will be prefixed by this:
-                              /opt/qa/soapvalidator/data/soapvalidator/
-    --genesis-case <testcase> If specified, run this testcase instead of the default plan.
-                              --genesis-case supercedes --genesis-plan
-                              The value specified will be prefixed by this:
-                              data/
-    --genesis-plan <plan>     If specified, run this plan instead of the default plan (smokeoss.txt)
-                              The value specified will be prefixed by this:
-                              conf/genesis/
-    --shutdown yes|no         (default=yes) If yes, allow this script to end when it has finished working.
-                              Since this script is the normal entrypoint, if you want it to just sleep
-                              instead of exiting, pass in a value of "no" for this and your test container
-                              will stay running so you can log in and run more tests.
-    -h|--help                 Print help message and exit
+	where ARGS may be any of the following:
+	--run-soap yes|no         (default=no) run soap-harness tests
+	--run-genesis yes|no      (default=no) run genesis tests
+	--upload-logs yes|no      (default=no) archive and upload test log files
+	--soap <test>             If specified, run this test instead of the default (SanityTest/)
+							  The value specified will be prefixed by this:
+							  /opt/qa/soapvalidator/data/soapvalidator/
+	--genesis-case <testcase> If specified, run this testcase instead of the default plan.
+							  --genesis-case supercedes --genesis-plan
+							  The value specified will be prefixed by this:
+							  data/
+	--genesis-plan <plan>     If specified, run this plan instead of the default plan (HA/UATmultinodefoss.txt)
+							  The value specified will be prefixed by this:
+							  conf/genesis/
+	--shutdown yes|no         (default=yes) If yes, allow this script to end when it has finished working.
+							  Since this script is the normal entrypoint, if you want it to just sleep
+							  instead of exiting, pass in a value of "no" for this and your test container
+							  will stay running so you can log in and run more tests.
+	-h|--help                 Print help message and exit
+
 	
 So if you wanted to connect to the `test` container and manually run all of the _SOAP Harness_ tests that are available, then execute the following after you are on the `test` service container:
 
@@ -141,3 +130,13 @@ Install the secret into the swarm before deploying the stack as follows:
 	docker secret create dot-s3curl <path-to-secret-file>
 
 If you don't have an id/key that will work, just comment out the lines in the `docker-compose.yml` file as described above in step 5 of _Setup_.
+
+### Adapting to work with other Zimbra Installations
+
+The SOAP and Genesis test frameworks have a specific set of setup prerequisites.  They are documented [here](https://github.com/Zimbra/docker-zcs-foss-test/wiki/ZCS-Test-Prerequisites).  The two reference configurations (for single and multi-node Zimbra installs) have been pre-configured to meet the requirements for SOAP and Genesis.
+
+To adapt this test Image to work with other Zimbra installs, you must make sure that the new Zimbra install has had the required configuration updates applied.
+
+
+
+
