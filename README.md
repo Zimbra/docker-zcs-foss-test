@@ -20,7 +20,7 @@ This will give you a single-node swarm and it will work fine.
 ### Setup
 
 1. Clone this repo. Then `cd` into the repo directory.
-2. Initialize the submodule: `git submodule update --init --recursive`
+2. Initialize/update the submodule: `git submodule update --init --recursive`
 3. Create an environment (`.env`) file: `cp zcs-foss/DOT-env .env`
 4. [optional] Register a _secret_ in your swarm (see _Secret_ below). If you don't, please comment out these lines in the `docker-compose.yml` file, as follows:
 
@@ -129,7 +129,7 @@ Install the secret into the swarm before deploying the stack as follows:
 
 	docker secret create dot-s3curl <path-to-secret-file>
 
-If you don't have an id/key that will work, just comment out the lines in the `docker-compose.yml` file as described above in step 5 of _Setup_.
+If you don't have an id/key that will work, just comment out the lines in the `docker-compose.yml` file as described above in step 4 of _Setup_.
 
 ### Adapting to work with other Zimbra Installations
 
